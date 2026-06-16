@@ -1,53 +1,31 @@
 # FindIt — AI-Powered Lost & Found Platform
 
-A full-stack web app that uses Claude Vision AI to automatically match lost and found items.
+A full-stack web app that helps people recover lost items by automatically matching them with found items using AI image comparison.
 
-## Project Structure
+## What it does
 
-```
-findit/
-├── frontend/          # React + Vite + TailwindCSS
-└── backend/           # Node.js + Express + Prisma + PostgreSQL
-```
+- Users post lost or found items with a photo and description
+- AI compares item photos and detects likely matches
+- Both parties get notified automatically when a match is found
 
-## Quick Start
+## Tech stack
 
-### 1. Clone and install
-```bash
-cd backend && npm install
-cd ../frontend && npm install
-```
+**Frontend:** React, Vite, TailwindCSS
+**Backend:** Node.js, Express
+**Database:** PostgreSQL (Supabase), Prisma ORM
+**AI:** Vision-based image matching
+**Other:** Cloudinary (image storage), Resend (email notifications)
+**Hosting:** Vercel + Railway
 
-### 2. Set up environment variables
-```bash
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
-# Fill in your keys
-```
+## Features
 
-### 3. Set up database
-```bash
-cd backend
-npx prisma migrate dev --name init
-npx prisma generate
-```
+- User authentication (JWT)
+- Image upload with AI-powered matching
+- Automated email notifications on match
+- Browse and filter lost/found items
+- Fully responsive design (mobile, tablet, desktop)
 
-### 4. Run dev servers
-```bash
-# Terminal 1
-cd backend && npm run dev
+## Live demo
 
-# Terminal 2
-cd frontend && npm run dev
-```
+[Add your deployed link here]
 
-## Tech Stack
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, Vite, TailwindCSS, React Query |
-| Backend | Node.js, Express.js |
-| Database | PostgreSQL via Supabase, Prisma ORM |
-| AI Matching | Anthropic Claude Vision API |
-| Image Storage | Cloudinary |
-| Email | Resend |
-| Hosting | Vercel (frontend) + Railway (backend) |
