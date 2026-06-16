@@ -27,5 +27,4 @@ A full-stack web app that helps people recover lost items by automatically match
 
 ## Live demo
 
-[Add your deployed link here]
-
+https://findit-tan-ten.vercel.app
