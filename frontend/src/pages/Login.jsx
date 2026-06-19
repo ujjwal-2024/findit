@@ -1,70 +1,141 @@
-// ADD THIS to backend/src/routes/auth.js
-// Add at the top with other requires:
-// const { Resend } = require('resend');
-// const crypto = require('crypto');
-// const resend = new Resend(process.env.RESEND_API_KEY);
+import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { useMutation } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
+import { MapPin, Eye, EyeOff } from 'lucide-react'
+import { login, register as registerUser } from '../api/auth'
+import { useAuth } from '../hooks/useAuth'
+import Button from '../components/ui/Button'
 
-// Also add these fields to your Prisma User model:
-// resetToken    String?   @map("reset_token")
-// resetTokenExp DateTime? @map("reset_token_exp")
+export default function Login() {
+  const [isRegister, setIsRegister] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const { loginUser } = useAuth()
+  const navigate = useNavigate()
+  const { register, handleSubmit, reset, formState: { errors } } = useForm()
 
-// POST /api/auth/forgot-password
-router.post('/forgot-password', async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email is required' });
+  const mutation = useMutation({
+    mutationFn: isRegister ? registerUser : login,
+    onSuccess: (data) => {
+      if (data.token && data.user) {
+        loginUser(data.token, data.user)
+        navigate('/')
+      }
+    },
+    onError: (err) => {
+      console.error('Auth error:', err)
+    }
+  })
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const onSubmit = (data) => {
+    mutation.mutate(data)
+  }
 
-  // Always return success even if email not found (security best practice)
-  if (!user) return res.json({ message: 'If that email exists, a reset link has been sent.' });
+  const switchMode = () => {
+    setIsRegister(!isRegister)
+    reset()
+    mutation.reset()
+  }
 
-  // Generate reset token
-  const token = crypto.randomBytes(32).toString('hex');
-  const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+  const getErrorMessage = () => {
+    const serverMsg = mutation.error?.response?.data?.error
+    if (serverMsg) return serverMsg
+    if (mutation.error?.message === 'Network Error') return 'Cannot connect to server. Please try again.'
+    return 'Something went wrong. Please try again.'
+  }
 
-  await prisma.user.update({
-    where: { email },
-    data: { resetToken: token, resetTokenExp: expiry }
-  });
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+      <div className="bg-white rounded-2xl border border-slate-200 p-8 w-full max-w-sm shadow-sm">
+        <Link to="/" className="flex items-center gap-2 text-blue-600 font-bold text-xl mb-6">
+          <MapPin className="h-6 w-6" /> FindIt
+        </Link>
 
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+        <h1 className="text-xl font-bold text-slate-900 mb-1">
+          {isRegister ? 'Create account' : 'Welcome back'}
+        </h1>
+        <p className="text-slate-500 text-sm mb-6">
+          {isRegister ? 'Start finding lost items' : 'Sign in to your account'}
+        </p>
 
-  await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL,
-    to: email,
-    subject: 'FindIt — Reset your password',
-    html: `
-      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-        <h2 style="color: #0F172A;">Reset your FindIt password</h2>
-        <p style="color: #475569;">Click the button below to reset your password. This link expires in 1 hour.</p>
-        <a href="${resetUrl}" style="display: inline-block; background: #2563EB; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin: 16px 0;">
-          Reset Password
-        </a>
-        <p style="color: #94A3B8; font-size: 12px;">If you didn't request this, ignore this email.</p>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {isRegister && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+              <input
+                className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ujjwal Gupta"
+                {...register('name', { required: 'Name is required', minLength: { value: 2, message: 'Name too short' } })}
+              />
+              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <input
+              type="email"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="you@example.com"
+              {...register('email', {
+                required: 'Email is required',
+                pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Invalid email address' }
+              })}
+            />
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder={isRegister ? 'Minimum 6 characters' : 'Your password'}
+                {...register('password', {
+                  required: 'Password is required',
+                  minLength: { value: 6, message: 'Password must be at least 6 characters' }
+                })}
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+          </div>
+
+          {!isRegister && (
+            <div className="text-right">
+              <Link to="/forgot-password" className="text-xs text-blue-600 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
+          )}
+
+          {mutation.isError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <p className="text-red-600 text-sm">{getErrorMessage()}</p>
+            </div>
+          )}
+
+          <Button type="submit" size="lg" className="w-full" disabled={mutation.isPending}>
+            {mutation.isPending
+              ? (isRegister ? 'Creating account...' : 'Signing in...')
+              : (isRegister ? 'Create Account' : 'Sign In')}
+          </Button>
+        </form>
+
+        <p className="text-center text-sm text-slate-500 mt-6">
+          {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
+          <button onClick={switchMode} className="text-blue-600 font-medium hover:underline">
+            {isRegister ? 'Sign in' : 'Register'}
+          </button>
+        </p>
       </div>
-    `
-  });
-
-  res.json({ message: 'If that email exists, a reset link has been sent.' });
-});
-
-// POST /api/auth/reset-password
-router.post('/reset-password', async (req, res) => {
-  const { token, password } = req.body;
-  if (!token || !password) return res.status(400).json({ error: 'Token and password are required' });
-  if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
-
-  const user = await prisma.user.findFirst({
-    where: { resetToken: token, resetTokenExp: { gt: new Date() } }
-  });
-
-  if (!user) return res.status(400).json({ error: 'Invalid or expired reset link' });
-
-  const passwordHash = await bcrypt.hash(password, 12);
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { passwordHash, resetToken: null, resetTokenExp: null }
-  });
-
-  res.json({ message: 'Password reset successfully. You can now log in.' });
-});
+    </div>
+  )
+}
