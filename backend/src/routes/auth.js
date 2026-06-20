@@ -1,13 +1,12 @@
-const { Resend } = require('resend');
-const crypto = require('crypto');
-const resend = new Resend(process.env.RESEND_API_KEY);
-
+require('dotenv').config();
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Joi = require('joi');
+const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate } = require('../middleware/auth');
+const { sendPasswordResetEmail } = require('../services/emailService');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -61,6 +60,7 @@ router.get('/me', authenticate, async (req, res) => {
   if (!user) return res.status(404).json({ error: 'User not found' });
   res.json(user);
 });
+
 // POST /api/auth/forgot-password
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
@@ -78,22 +78,7 @@ router.post('/forgot-password', async (req, res) => {
   });
 
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-
-  await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL,
-    to: email,
-    subject: 'FindIt — Reset your password',
-    html: `
-      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-        <h2 style="color: #0F172A;">Reset your FindIt password</h2>
-        <p style="color: #475569;">Click the button below to reset your password. This link expires in 1 hour.</p>
-        <a href="${resetUrl}" style="display: inline-block; background: #2563EB; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin: 16px 0;">
-          Reset Password
-        </a>
-        <p style="color: #94A3B8; font-size: 12px;">If you didn't request this, ignore this email.</p>
-      </div>
-    `
-  });
+  await sendPasswordResetEmail(email, resetUrl);
 
   res.json({ message: 'If that email exists, a reset link has been sent.' });
 });
