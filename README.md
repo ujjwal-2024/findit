@@ -1,30 +1,42 @@
 # FindIt — AI-Powered Lost & Found Platform
 
-A full-stack web app that helps people recover lost items by automatically matching them with found items using AI image comparison.
+FindIt connects people who have lost items with people who have found them, using AI image matching to detect when a lost item and a found item are likely the same — then notifies both parties automatically.
 
-## What it does
+## How it works
 
-- Users post lost or found items with a photo and description
-- AI compares item photos and detects likely matches
-- Both parties get notified automatically when a match is found
-
-## Tech stack
-
-**Frontend:** React, Vite, TailwindCSS
-**Backend:** Node.js, Express
-**Database:** PostgreSQL (Supabase), Prisma ORM
-**AI:** Vision-based image matching
-**Other:** Cloudinary (image storage), Resend (email notifications)
-**Hosting:** Vercel + Railway
+1. A user posts a **lost item** with a photo and description
+2. Another user posts a **found item** with a photo and description
+3. AI compares item photos and detects likely matches
+4. If the match score crosses 70%, both users get notified and can contact each other
 
 ## Features
 
-- User authentication (JWT)
-- Image upload with AI-powered matching
-- Automated email notifications on match
-- Browse and filter lost/found items
+- Email/password authentication with JWT
+- Upload lost/found items with photo, category, location, and date
+- Automatic AI image comparison and match scoring
+- In-app match details with contact options
+- Browse and filter all active items
+- Status tracking per item (active, matched, returned, closed)
+- Forgot password with reset link
 - Fully responsive design (mobile, tablet, desktop)
+
+## Tech stack
+
+**Frontend:** React 18, Vite, TailwindCSS, React Query, React Hook Form
+**Backend:** Node.js, Express.js
+**Database:** PostgreSQL (Supabase), Prisma ORM
+**AI Matching:** Groq API (Llama 4 Scout vision model)
+**Image Storage:** Cloudinary
+**Hosting:** Vercel (frontend) + Railway (backend)
 
 ## Live demo
 
 https://findit-tan-ten.vercel.app
+
+## GitHub
+
+https://github.com/ujjwal-2024/findit
+
+## License
+
+MIT
