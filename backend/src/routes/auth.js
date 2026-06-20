@@ -6,7 +6,6 @@ const Joi = require('joi');
 const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate } = require('../middleware/auth');
-const { sendPasswordResetEmail } = require('../services/emailService');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -67,7 +66,7 @@ router.post('/forgot-password', async (req, res) => {
   if (!email) return res.status(400).json({ error: 'Email is required' });
 
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) return res.json({ message: 'If that email exists, a reset link has been sent.' });
+  if (!user) return res.status(404).json({ error: 'No account found with that email' });
 
   const token = crypto.randomBytes(32).toString('hex');
   const expiry = new Date(Date.now() + 60 * 60 * 1000);
@@ -78,9 +77,8 @@ router.post('/forgot-password', async (req, res) => {
   });
 
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-  await sendPasswordResetEmail(email, resetUrl);
 
-  res.json({ message: 'If that email exists, a reset link has been sent.' });
+  res.json({ resetUrl });
 });
 
 // POST /api/auth/reset-password
