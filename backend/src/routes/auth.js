@@ -60,48 +60,51 @@ router.get('/me', authenticate, async (req, res) => {
   res.json(user);
 });
 
-// POST /api/auth/forgot-password
+const { createOTP, verifyOTP } = require('../services/otpService')
+
+// POST /api/auth/forgot-password — sends OTP
 router.post('/forgot-password', async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email is required' });
+  const { email } = req.body
+  if (!email) return res.status(400).json({ error: 'Email is required' })
 
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) return res.status(404).json({ error: 'No account found with that email' });
+  try {
+    await createOTP(email)
+    res.json({ message: 'OTP sent to your email' })
+  } catch (err) {
+    res.status(400).json({ error: err.message })
+  }
+})
 
-  const token = crypto.randomBytes(32).toString('hex');
-  const expiry = new Date(Date.now() + 60 * 60 * 1000);
+// POST /api/auth/verify-otp — verifies OTP
+router.post('/verify-otp', async (req, res) => {
+  const { email, otp } = req.body
+  if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' })
 
+  try {
+    await verifyOTP(email, otp)
+    res.json({ message: 'OTP verified successfully' })
+  } catch (err) {
+    res.status(400).json({ error: err.message })
+  }
+})
+
+// POST /api/auth/reset-password — resets password after OTP verified
+router.post('/reset-password', async (req, res) => {
+  const { email, password } = req.body
+  if (!email || !password) return res.status(400).json({ error: 'Email and password are required' })
+  if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' })
+
+  const user = await prisma.user.findUnique({ where: { email } })
+  if (!user) return res.status(404).json({ error: 'User not found' })
+
+  const passwordHash = await bcrypt.hash(password, 12)
   await prisma.user.update({
     where: { email },
-    data: { resetToken: token, resetTokenExp: expiry }
-  });
+    data: { passwordHash }
+  })
 
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-
-  res.json({ resetUrl });
-});
-
-// POST /api/auth/reset-password
-router.post('/reset-password', async (req, res) => {
-  const { token, password } = req.body;
-  if (!token || !password) return res.status(400).json({ error: 'Token and password are required' });
-  if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
-
-  const user = await prisma.user.findFirst({
-    where: { resetToken: token, resetTokenExp: { gt: new Date() } }
-  });
-
-  if (!user) return res.status(400).json({ error: 'Invalid or expired reset link' });
-
-  const passwordHash = await bcrypt.hash(password, 12);
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { passwordHash, resetToken: null, resetTokenExp: null }
-  });
-
-  res.json({ message: 'Password reset successfully. You can now log in.' });
-});
-
+  res.json({ message: 'Password reset successfully' })
+})
 // GET /api/auth/public-profile/:id
 router.get('/public-profile/:id', async (req, res) => {
   const user = await prisma.user.findUnique({
