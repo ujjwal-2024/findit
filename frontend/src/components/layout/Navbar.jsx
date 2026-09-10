@@ -38,6 +38,9 @@ export default function Navbar() {
               <Link to="/profile" className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg">
                 <User className="h-5 w-5" />
               </Link>
+              <Link to="/my-qrcode" className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg">
+  <QrCode className="h-5 w-5" />
+</Link>
               <button onClick={handleLogout} className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg">
                 <LogOut className="h-5 w-5" />
               </button>
