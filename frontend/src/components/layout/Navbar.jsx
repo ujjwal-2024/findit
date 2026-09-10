@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { MapPin, Bell, User, LogOut, Search, Menu, X } from 'lucide-react'
+import { MapPin, Bell, User, LogOut, Search, Menu, X, QrCode } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
+
 
 export default function Navbar() {
   const { user, logout } = useAuth()

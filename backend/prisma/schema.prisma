@@ -18,6 +18,8 @@ model User {
   resetTokenExp DateTime? @map("reset_token_exp")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+  otpCode      String?   @map("otp_code")
+  otpExpiry    DateTime? @map("otp_expiry")
  
 
   items         Item[]
