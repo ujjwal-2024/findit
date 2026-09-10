@@ -102,4 +102,33 @@ router.post('/reset-password', async (req, res) => {
   res.json({ message: 'Password reset successfully. You can now log in.' });
 });
 
+// GET /api/auth/public-profile/:id
+router.get('/public-profile/:id', async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, name: true }
+  })
+  if (!user) return res.status(404).json({ error: 'User not found' })
+  res.json(user)
+})
+
+// POST /api/auth/notify-owner/:id
+router.post('/notify-owner/:id', async (req, res) => {
+  const { finderName, finderContact, location, message } = req.body
+  if (!finderName || !finderContact) return res.status(400).json({ error: 'Name and contact are required' })
+
+  const owner = await prisma.user.findUnique({ where: { id: req.params.id } })
+  if (!owner) return res.status(404).json({ error: 'Owner not found' })
+
+  // Save as a notification in DB
+  await prisma.notification.create({
+    data: {
+      userId: owner.id,
+      matchId: null,
+      message: `${finderName} found your item! Contact: ${finderContact}. Found at: ${location || 'not specified'}. Message: ${message || 'none'}`,
+    }
+  })
+
+  res.json({ message: 'Owner notified successfully' })
+})
 module.exports = router;
