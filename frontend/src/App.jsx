@@ -11,6 +11,10 @@ import MatchDetail from './pages/MatchDetail'
 import Profile from './pages/Profile'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import MyQRCode from './pages/MyQRCode'
+import FoundByScanner from './pages/FoundByScanner'
+
+
 
 
 
@@ -29,6 +33,8 @@ export default function App() {
             <Route path="/matches/:id" element={<MatchDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/my-qrcode" element={<MyQRCode />} />
+            <Route path="/found/:userId" element={<FoundByScanner />} />
             
 <Route path="/forgot-password" element={<ForgotPassword />} />
 <Route path="/reset-password" element={<ResetPassword />} />
